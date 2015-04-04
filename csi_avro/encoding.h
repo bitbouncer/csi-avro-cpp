@@ -7,6 +7,18 @@
 namespace csi
 {
     template<class T>
+    void avro_json_encode(const T& src, avro::OutputStream& dst)
+    {
+        avro::EncoderPtr e = avro::jsonEncoder(T::valid_schema());
+        e->init(dst);
+        avro::encode(*e, src);
+        // push back unused characters to the output stream again... really strange...                         
+        // otherwise content_length will be a multiple of 4096
+        e->flush();
+    }
+
+    /*
+    template<class T>
     void avro_json_encode(const T& src, const avro::ValidSchema& schema, avro::OutputStream& dst)
     {
         avro::EncoderPtr e = avro::jsonEncoder(schema);
@@ -16,7 +28,18 @@ namespace csi
         // otherwise content_length will be a multiple of 4096
         e->flush();
     }
+    */
 
+    template<class T>
+    T& avro_json_decode(avro::InputStream& src, T& dst)
+    {
+        avro::DecoderPtr e = avro::jsonDecoder(T::valid_schema());
+        e->init(src);
+        avro::decode(*e, dst);
+        return dst;
+    }
+
+    /*
     template<class T>
     T& avro_json_decode(avro::InputStream& src, const avro::ValidSchema& schema, T& dst)
     {
@@ -26,6 +49,7 @@ namespace csi
         avro::decode(*e, dst);
         return dst;
     }
+    */
 
     // missing funktion in avro::StreamReader* 
     size_t readBytes(avro::StreamReader* stream, uint8_t* b, size_t n);
