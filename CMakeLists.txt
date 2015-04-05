@@ -11,5 +11,6 @@ endif()
 
 add_subdirectory(csi_avro)
 add_subdirectory(programs)
+add_subdirectory(tests)
 
 
