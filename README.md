@@ -13,3 +13,6 @@ avro_normalize_schema
  
  
 
+Building
+see
+https://github.com/bitbouncer/csi-build-scripts
