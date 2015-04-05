@@ -38,7 +38,7 @@
 #include <avro/ValidSchema.hh>
 #include <avro/NodeImpl.hh>
 
-#include <csi_avro/md5.h>
+#include <csi_avro/utils.h>
 
 using std::ostream;
 using std::ifstream;
@@ -751,101 +751,12 @@ void CodeGen::generateExtensions(const ValidSchema& schema)
 {
     const NodePtr& root = schema.root();
 
+    hash_ = generate_hash(schema);
 
-    std::stringstream out2;
-    schema.toJson(out2);
-    std::string str = out2.str();
-    // strip whitespace
-    str.erase(remove_if(str.begin(), str.end(), ::isspace), str.end());  // c version does not use locale... 
-    MD5Context ctx;
-    MD5Update(&ctx, (const uint8_t*)str.data(), str.size());
-    
-    hash_ = MD5Final(&ctx);
-
+    std::string str = normalize(schema);
     escape_string(str, std::back_inserter(escaped_schema_string_));
 
     root_name_ = root->name().fullname(); // to only emit has etc once... might exist a better way of doing this...
-
-    //the escaped string should be used to provide the code for valid-schema...
-    //avro::ValidSchema schema = avro::compileJsonSchemaFromString(s);
-
-    /*
-    With C++11 you can use constexpr, like this:
-
-    class MyClass
-    {
-    public:
-        static Uuid constexpr uuid = ...;
-    };
-    */
-
-    /*
-    if (!ns_.empty()) {
-        os_ << "namespace " << ns_ << " {\n";
-        inNamespace_ = true;
-    }
-
-    if (root->hasName())
-    {
-        os_ << "// fullname -  >" << root->name().fullname() << "\n";
-        os_ << "// ns         ->" << root->name().ns() << "\n";
-        os_ << "// simpleName ->" << root->name().simpleName() << "\n";
-    }
-
-    os_ << "  namespace " << root->name().simpleName() << "\n";
-    os_ << "  {" << "\n";
-    os_ << "    inline const boost::uuids::uuid hash() { static const boost::uuids::uuid _hash(boost::uuids::string_generator()(\"" << to_string(hash) << "\")); return _hash; }\n";
-    os_ << "    inline const char* schema_as_string() { return \"" << escaped_string << "\"; } \n";
-    os_ << "    const avro::ValidSchema schema();" << "\n";
-    os_ << "  }" << "\n\n";
-
-
-    if (!ns_.empty()) {
-        inNamespace_ = false;
-        os_ << "}\n";
-    }
-    */
-
-    /*
-    const boost::uuids::uuid test::_hash(boost::uuids::string_generator()("ggggg"));
-    const char*              test::_schema = "{\"type\":\"record\",\"name\":\"rest_proxy_post_binary_request\",\"fields\":[{\"name\":\"records\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"record\",\"fields\":[{\"name\":\"key\",\"type\":\"string\"},{\"name\":\"value\",\"type\":\"string\"},{\"name\":\"partition\",\"type\":\"int\"}]}}}]}";
-    const avro::ValidSchema  test::_validSchema = avro::compileJsonSchemaFromString(_schema);
-
-
-
-    os_ << "namespace " << "test" << "\n";
-    os_ << "{" << "\n";
-    os_ << "const boost::uuids::uuid hash();" << "\n";
-    os_ << "const avro::ValidSchema schema();" << "\n";
-    os_ << "}" << "\n\n";
-
-    os_ << "#ifdef _GEN_AVRO_CPP_" << "\n\n";
-
-    os_ << "namespace " << "test" << "\n";
-    os_ << "{" << "\n";
-    os_ << "const boost::uuids::uuid hash();" << "\n";
-    os_ << "const avro::ValidSchema schema();" << "\n";
-    os_ << "}" << "\n\n";
-
-    os_ << "#endif " << "\n\n\n";
-
-
-
-
-    private:
-        static const boost::uuids::uuid   _hash;
-        static const char*                _schema;
-        static const avro::ValidSchema    _validSchema;
-    };
-
-
-    os_ << "#ifndef " << h << "\n";
-    os_ << "#define " << h << "\n\n\n";
-
-    os_ << "#include <sstream>\n"
-        << "#include \"boost/any.hpp\"\n"
-*/
-
 }
 
 void CodeGen::generate(const ValidSchema& schema)

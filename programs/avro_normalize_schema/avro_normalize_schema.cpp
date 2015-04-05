@@ -9,6 +9,7 @@
 #include <avro/ValidSchema.hh>
 #include <sstream>
 #include <boost/uuid/uuid_io.hpp>
+#include <csi_avro/utils.h>
 
 template<class OutIter>
 OutIter escape_string(std::string const& s, OutIter out) {
@@ -72,18 +73,11 @@ int main(int argc, char** argv)
     try{
         if (!outfile.empty())
         {
-            std::stringstream out2;
-            schema.toJson(out2);
-            std::string str = out2.str();
-            // strip whitespace
-            str.erase(remove_if(str.begin(), str.end(), ::isspace), str.end());  // c version does not use locale... 
-
+            
+            std::string str  = normalize(schema);
             std::string escaped_string;
-
             escape_string(str, std::back_inserter(escaped_string));
             std::cerr << escaped_string << std::endl;
-
-
             std::ofstream out(outfile);
             out << escaped_string;
         }
