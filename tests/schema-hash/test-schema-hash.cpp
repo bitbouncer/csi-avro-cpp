@@ -12,6 +12,9 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <csi_avro/utils.h>
 
+//#include <openssl/md5.h>
+
+
 boost::uuids::uuid generate_hash(const char* schema)
 {
     const avro::ValidSchema validSchema(avro::compileJsonSchemaFromString(schema));
@@ -28,24 +31,23 @@ struct testcase
 
 std::vector<testcase> tests = 
 { 
-    { "ccda95e1-5cdf-5438-be1b-c8cab417fede", "\"string\"" } 
+    { "095d71cf-1255-6b9d-5e33-0ad575b3df5d", "\"string\"" } 
 };
 
 int main(int argc, char** argv)
 {
     for (std::vector<testcase>::const_iterator i = tests.begin(); i != tests.end(); ++i)
     {
-        std::string was = to_string(generate_hash(i->schema));
-        if (was.compare(i->hash) == 0)
+        std::string hash          = to_string(generate_hash(i->schema));
+        if (hash.compare(i->hash) == 0)
         {
-            std::cout << "OK " << was << std::endl;
+            std::cout << "OK " << hash << std::endl;
         }
         else
         {
-            std::cout << "FAILED was:" << was << ", expected:" << i->schema << std::endl;
+            std::cout << "FAILED got:" << hash << ", expected:" << i->hash << std::endl;
         }
     }
-    std::cerr << "hash: " << to_string(generate_hash("\"string\"")) << std::endl;
 }
 
 
