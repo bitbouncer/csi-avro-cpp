@@ -39,7 +39,7 @@ namespace csi
     size_t readBytes(avro::StreamReader* stream, uint8_t* b, size_t n);
 
     template<class T>
-    void avro_encode(const T& src, avro::OutputStream& dst)
+    void avro_binary_encode(const T& src, avro::OutputStream& dst)
     {
         avro::EncoderPtr e = avro::binaryEncoder();
         e->init(dst);
@@ -50,7 +50,7 @@ namespace csi
     }
 
     template<class T>
-    T& avro_decode(avro::InputStream& src, T& dst)
+    T& avro_binary_decode(avro::InputStream& src, T& dst)
     {
         avro::DecoderPtr e = avro::binaryDecoder();
         e->init(src);
@@ -59,7 +59,7 @@ namespace csi
     }
 
     template<class T>
-    T& avro_decode(std::auto_ptr<avro::InputStream> src, T& dst)
+    T& avro_binary_decode(std::auto_ptr<avro::InputStream> src, T& dst)
     {
         avro::DecoderPtr e = avro::binaryDecoder();
         e->init(*src);
@@ -68,7 +68,7 @@ namespace csi
     }
 
     template<class T>
-    size_t avro_encode(const T& src, char* buffer, size_t capacity)
+    size_t avro_binary_encode(const T& src, char* buffer, size_t capacity)
     {
         //write the data
         auto os = avro::memoryOutputStream();
@@ -90,7 +90,7 @@ namespace csi
     }
 
     template<class T>
-    T& avro_decode(const char* buffer, size_t size, T& dst)
+    T& avro_binary_decode(const char* buffer, size_t size, T& dst)
     {
         std::auto_ptr<avro::InputStream> src = avro::memoryInputStream((const uint8_t*)buffer, size);
         avro::DecoderPtr e = avro::binaryDecoder();

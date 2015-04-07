@@ -26,3 +26,4 @@ boost::uuids::uuid generate_hash(const avro::ValidSchema& vs)
     MD5_Final(uuid.data, &ctx);
     return uuid;
 }
+
