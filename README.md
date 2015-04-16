@@ -9,7 +9,7 @@ adds the following new static methods to generated classes
   - static const avro::ValidSchema valid_schema()
   
 avro_normalize_schema
- - outputs nomalized schema to cout
+ - outputs normalized schema to cout
  
  
 
