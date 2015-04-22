@@ -1,6 +1,7 @@
 #include <avro/Specific.hh>
 #include <avro/Encoder.hh>
 #include <avro/Decoder.hh>
+#include "utils.h"
 
 #pragma once
 
@@ -88,6 +89,44 @@ namespace csi
         assert(content_length1 == content_length2);
         return content_length1;
     }
+
+    // encodes fingerprint first in 16 bytes
+    template<class T>
+    void avro_binary_encode_with_schema(const T& src, avro::OutputStream& dst)
+    {
+        avro::EncoderPtr e = avro::binaryEncoder();
+        e->init(dst);
+        avro::encode(*e, to_array(src.schema_hash())); // you need to generate your classes with csi_avrogencpp - it adds this method
+        avro::encode(*e, src);
+        // push back unused characters to the output stream again... really strange... 			
+        // otherwise content_length will be a multiple of 4096
+        e->flush();
+    }
+
+    template<class T>
+    bool avro_binary_decode_with_schema(std::auto_ptr<avro::InputStream> src, T& dst)
+    {
+        boost::array<uint8_t, 16> schema_id;
+
+        avro::DecoderPtr e = avro::binaryDecoder();
+        e->init(*src);
+        avro::decode(*e, schema_id);
+        if (dst.schema_hash() != to_uuid(schema_id)) // you need to generate your classes with csi_avrogencpp - it adds this method
+        {
+            return false;
+        }
+
+        try
+        {
+            avro::decode(*e, dst);
+        }
+        catch (...)
+        {
+            return false;
+        }
+        return true;
+    }
+
 
     template<class T>
     T& avro_binary_decode(const char* buffer, size_t size, T& dst)
