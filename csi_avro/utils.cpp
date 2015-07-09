@@ -2,6 +2,20 @@
 #include <sstream>
 #include <openssl/md5.h>
 #include "utils.h"
+#include "encoding.h"
+
+std::string to_string(const avro::OutputStream& os)
+{
+    std::string res;
+    size_t sz = os.byteCount();
+    res.reserve(sz);
+    res.resize(sz);
+    auto x = avro::memoryInputStream(os);
+    avro::StreamReader reader(*x.get());
+    size_t actual = csi::readBytes(&reader, (uint8_t*)&res[0], sz);
+    assert(actual == sz);
+    return res;
+}
 
 std::string normalize(const avro::ValidSchema& vs)
 {

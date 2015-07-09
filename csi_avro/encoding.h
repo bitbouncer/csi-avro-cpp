@@ -19,19 +19,11 @@ namespace csi
     }
 
     template<class T>
-    T& avro_json_decode(avro::InputStream& src, T& dst)
+    T& avro_json_decode(const avro::OutputStream& src, T& dst)
     {
+        auto mis = avro::memoryInputStream(src);
         avro::DecoderPtr e = avro::jsonDecoder(T::valid_schema());
-        e->init(src);
-        avro::decode(*e, dst);
-        return dst;
-    }
-
-    template<class T>
-    T& avro_json_decode(std::auto_ptr<avro::InputStream> src, T& dst)
-    {
-        avro::DecoderPtr e = avro::jsonDecoder(T::valid_schema());
-        e->init(*src);
+        e->init(*mis);
         avro::decode(*e, dst);
         return dst;
     }
@@ -51,19 +43,11 @@ namespace csi
     }
 
     template<class T>
-    T& avro_binary_decode(avro::InputStream& src, T& dst)
+    T& avro_binary_decode(const avro::OutputStream& src, T& dst)
     {
+        auto mis = avro::memoryInputStream(src);
         avro::DecoderPtr e = avro::binaryDecoder();
-        e->init(src);
-        avro::decode(*e, dst);
-        return dst;
-    }
-
-    template<class T>
-    T& avro_binary_decode(std::auto_ptr<avro::InputStream> src, T& dst)
-    {
-        avro::DecoderPtr e = avro::binaryDecoder();
-        e->init(*src);
+        e->init(*mis);
         avro::decode(*e, dst);
         return dst;
     }
@@ -92,7 +76,7 @@ namespace csi
 
     // encodes fingerprint first in 16 bytes
     template<class T>
-    void avro_binary_encode_with_schema(const T& src, avro::OutputStream& dst)
+    void avro_binary_encode_with_fingerprint(const T& src, avro::OutputStream& dst)
     {
         avro::EncoderPtr e = avro::binaryEncoder();
         e->init(dst);
@@ -104,12 +88,11 @@ namespace csi
     }
 
     template<class T>
-    bool avro_binary_decode_with_schema(std::auto_ptr<avro::InputStream> src, T& dst)
+    bool avro_binary_decode_with_fingerprint(avro::InputStream& is, T& dst)
     {
         boost::array<uint8_t, 16> schema_id;
-
         avro::DecoderPtr e = avro::binaryDecoder();
-        e->init(*src);
+        e->init(is);
         avro::decode(*e, schema_id);
         if (dst.schema_hash() != to_uuid(schema_id)) // you need to generate your classes with csi_avrogencpp - it adds this method
         {
@@ -127,11 +110,17 @@ namespace csi
         return true;
     }
 
+    template<class T>
+    bool avro_binary_decode_with_fingerprint(const avro::OutputStream& src, T& dst)
+    {
+        auto mis = avro::memoryInputStream(src);
+        return avro_binary_decode_with_schema(*mis);
+    }
 
     template<class T>
     T& avro_binary_decode(const char* buffer, size_t size, T& dst)
     {
-        std::auto_ptr<avro::InputStream> src = avro::memoryInputStream((const uint8_t*)buffer, size);
+        auto src = avro::memoryInputStream((const uint8_t*)buffer, size);
         avro::DecoderPtr e = avro::binaryDecoder();
         e->init(*src);
         avro::decode(*e, dst);

@@ -29,17 +29,20 @@ inline std::string to_string(const boost::array<uint8_t, 16>& a)
     return to_string(uuid);
 }
 
-//inefficient but useful for debugging and error handling
+//inefficient but useful for debugging and error handling -- remove???
+/*
 inline std::string to_string(std::auto_ptr<avro::InputStream> pstream)
 {
     std::string s;
     const uint8_t* buf;
     size_t len;
     while (pstream->next(&buf, &len))
-        s.append((const char*) buf, len);
+        s.append((const char*)buf, len);
     return s;
 }
+*/
 
+std::string        to_string(const avro::OutputStream& os);
 std::string        normalize(const avro::ValidSchema&);
 boost::uuids::uuid generate_hash(const avro::ValidSchema&);
 
