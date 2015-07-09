@@ -114,7 +114,7 @@ namespace csi
     bool avro_binary_decode_with_fingerprint(const avro::OutputStream& src, T& dst)
     {
         auto mis = avro::memoryInputStream(src);
-        return avro_binary_decode_with_schema(*mis);
+        return avro_binary_decode_with_fingerprint(*mis);
     }
 
     template<class T>
