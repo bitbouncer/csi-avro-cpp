@@ -12,8 +12,9 @@ std::string to_string(const avro::OutputStream& os)
     res.resize(sz);
     auto x = avro::memoryInputStream(os);
     avro::StreamReader reader(*x.get());
-    size_t actual = csi::readBytes(&reader, (uint8_t*)&res[0], sz);
-    assert(actual == sz);
+    //size_t actual = csi::readBytes(&reader, (uint8_t*)&res[0], sz);
+	reader.readBytes((uint8_t*)&res[0], sz);
+    //assert(actual == sz);
     return res;
 }
 

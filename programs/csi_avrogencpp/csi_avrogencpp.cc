@@ -277,11 +277,13 @@ string CodeGen::generateRecordType(const NodePtr& n)
     if (n->name().fullname() == root_name_)
     {
         os_ << "//  avro extension\n";
-        os_ << "    static inline const boost::uuids::uuid schema_hash()      { static const boost::uuids::uuid _hash(boost::uuids::string_generator()(\"" << to_string(hash_) << "\")); return _hash; }\n";
-        os_ << "    static inline const char*              schema_as_string() { return \"" << escaped_schema_string_ << "\"; } \n";
-        os_ << "    static const avro::ValidSchema         valid_schema()     { static const avro::ValidSchema _validSchema(avro::compileJsonSchemaFromString(schema_as_string())); return _validSchema; }\n";
+        os_ << "    static inline const boost::uuids::uuid      schema_hash()      { static const boost::uuids::uuid _hash(boost::uuids::string_generator()(\"" << to_string(hash_) << "\")); return _hash; }\n";
+        os_ << "    static inline const char*                   schema_as_string() { return \"" << escaped_schema_string_ << "\"; } \n";
+		os_ << "    static boost::shared_ptr<avro::ValidSchema> valid_schema()     { static const boost::shared_ptr<avro::ValidSchema> _validSchema(boost::make_shared<avro::ValidSchema>(avro::compileJsonSchemaFromString(schema_as_string()))); return _validSchema; }\n";
     }
-    //end extension
+
+	//os_ << "    static const avro::ValidSchema         valid_schema()     { static const avro::ValidSchema _validSchema(avro::compileJsonSchemaFromString(schema_as_string())); return _validSchema; }\n";
+	//end extension
 
     os_ << "};\n\n";
     return decorate(n->name());
@@ -771,9 +773,10 @@ void CodeGen::generate(const ValidSchema& schema)
     os_ << "#define " << h << "\n\n\n";
 
     os_ << "#include <sstream>\n"
-        << "#include \"boost/any.hpp\"\n"
+        << "#include <boost/any.hpp>\n"
         << "#include <boost/uuid/uuid.hpp>\n"
         << "#include <boost/uuid/string_generator.hpp>\n"
+        << "#include <boost/make_shared.hpp>\n"
         << "#include \"" << includePrefix_ << "Specific.hh\"\n"
         << "#include \"" << includePrefix_ << "Encoder.hh\"\n"
         << "#include \"" << includePrefix_ << "Decoder.hh\"\n"

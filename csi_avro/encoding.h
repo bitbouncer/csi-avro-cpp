@@ -7,10 +7,13 @@
 
 namespace csi
 {
-    template<class T>
+	// missing funktion in avro::StreamReader* 
+	//size_t readBytes(avro::StreamReader* stream, uint8_t* b, size_t n);
+	
+	template<class T>
     void avro_json_encode(const T& src, avro::OutputStream& dst)
     {
-        avro::EncoderPtr e = avro::jsonEncoder(T::valid_schema());
+        avro::EncoderPtr e = avro::jsonEncoder(*T::valid_schema());
         e->init(dst);
         avro::encode(*e, src);
         // push back unused characters to the output stream again... really strange...                         
@@ -22,14 +25,11 @@ namespace csi
     T& avro_json_decode(const avro::OutputStream& src, T& dst)
     {
         auto mis = avro::memoryInputStream(src);
-        avro::DecoderPtr e = avro::jsonDecoder(T::valid_schema());
+        avro::DecoderPtr e = avro::jsonDecoder(*T::valid_schema());
         e->init(*mis);
         avro::decode(*e, dst);
         return dst;
     }
-
-    // missing funktion in avro::StreamReader* 
-    size_t readBytes(avro::StreamReader* stream, uint8_t* b, size_t n);
 
     template<class T>
     void avro_binary_encode(const T& src, avro::OutputStream& dst)
@@ -52,6 +52,7 @@ namespace csi
         return dst;
     }
 
+	//raw encoding without type info
     template<class T>
     size_t avro_binary_encode(const T& src, char* buffer, size_t capacity)
     {
@@ -73,6 +74,18 @@ namespace csi
         assert(content_length1 == content_length2);
         return content_length1;
     }
+
+	//raw encoding without type info
+	template<class T>
+	T& avro_binary_decode(const char* buffer, size_t size, T& dst)
+	{
+		auto src = avro::memoryInputStream((const uint8_t*)buffer, size);
+		avro::DecoderPtr e = avro::binaryDecoder();
+		e->init(*src);
+		avro::decode(*e, dst);
+		return dst;
+	}
+
 
     // encodes fingerprint first in 16 bytes
     template<class T>
@@ -117,14 +130,43 @@ namespace csi
         return avro_binary_decode_with_fingerprint(*mis, dst);
     }
 
-    template<class T>
-    T& avro_binary_decode(const char* buffer, size_t size, T& dst)
-    {
-        auto src = avro::memoryInputStream((const uint8_t*)buffer, size);
-        avro::DecoderPtr e = avro::binaryDecoder();
-        e->init(*src);
-        avro::decode(*e, dst);
-        return dst;
-    }
+	// encodes id first in 4 bytes ( linkedin/confluent codec style )
+	template<class T>
+	void avro_binary_encode_with_schema_id(int32_t id, const T& src, avro::OutputStream& dst)
+	{
+		avro::EncoderPtr e = avro::binaryEncoder();
+		e->init(dst);
+		avro::encode(*e, id);
+		avro::encode(*e, src);
+		// push back unused characters to the output stream again... really strange... 			
+		// otherwise content_length will be a multiple of 4096
+		e->flush();
+	}
+
+	template<class T>
+	bool avro_binary_decode_with_schema_id(avro::InputStream& is, int32_t id, T& dst)
+	{
+		int32_t schema_id;
+		avro::DecoderPtr e = avro::binaryDecoder();
+		e->init(is);
+		avro::decode(*e, schema_id);
+		if (id != schema_id)
+		{
+			return false;
+		}
+
+		try
+		{
+			avro::decode(*e, dst);
+		}
+		catch (...)
+		{
+			return false;
+		}
+		return true;
+	}
+
+
+
 }; // csi
 
