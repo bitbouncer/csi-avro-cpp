@@ -68,11 +68,14 @@ namespace csi
         //get the data from the internals of avro stream
         auto x = avro::memoryInputStream(*os.get());
         avro::StreamReader reader(*x.get());
-        size_t content_length1 = os->byteCount();
-        assert(content_length1 <= capacity);
-        size_t content_length2 = csi::readBytes(&reader, (uint8_t*)buffer, capacity);
-        assert(content_length1 == content_length2);
-        return content_length1;
+        size_t sz = os->byteCount();
+		if (sz <= capacity)
+		{
+			reader.readBytes((uint8_t*)buffer, sz);
+			return sz;
+		}
+		assert(sz <= capacity);
+		return 0;
     }
 
 	//raw encoding without type info
@@ -85,7 +88,6 @@ namespace csi
 		avro::decode(*e, dst);
 		return dst;
 	}
-
 
     // encodes fingerprint first in 16 bytes
     template<class T>
